@@ -8,24 +8,15 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial; }
         body { background: #0f0f0f; color: white; padding: 20px; }
         
-        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .logo { color: #ff0000; font-size: 32px; font-weight: bold; cursor: pointer; }
+        .logo { color: #ff0000; font-size: 32px; font-weight: bold; }
         .create-btn { background: #ff0000; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
         
-        /* Upload Form */
         .upload-form { 
             display: none;
-            position: fixed; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%); 
-            background: #282828; 
-            padding: 30px; 
-            border-radius: 8px; 
-            z-index: 1000; 
-            width: 90%; 
-            max-width: 500px; 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #282828; padding: 30px; border-radius: 8px; z-index: 1000; 
+            width: 90%; max-width: 500px; 
         }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: bold; }
@@ -34,47 +25,65 @@
         .submit-btn { background: #ff0000; color: white; padding: 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
         .cancel-btn { background: #666; color: white; padding: 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; }
         
-        /* Video Grid */
         .video-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .video-card { background: #282828; border-radius: 8px; overflow: hidden; }
-        .video-player { width: 100%; height: 200px; background: #000; }
+        .video-card { background: #282828; border-radius: 8px; overflow: hidden; position: relative; }
+        .video-player { width: 100%; height: 200px; background: #000; cursor: pointer; }
         .video-info { padding: 15px; }
         .video-title { font-size: 18px; margin-bottom: 8px; }
         .video-description { color: #aaa; margin-bottom: 8px; font-size: 14px; }
         .video-views { color: #888; font-size: 14px; }
         
-        /* Overlay */
         .overlay { 
             display: none; 
-            position: fixed; 
-            top: 0; left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0,0,0,0.8); 
-            z-index: 999; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 999; 
+        }
+        
+        /* Полноэкранный режим */
+        .fullscreen-video {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 2000;
+        }
+        .fullscreen-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 2001;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div class="header">
-        <div class="logo" onclick="showHomePage()">CREATE</div>
-        <button class="create-btn" onclick="showUploadForm()">
-            📹 СОЗДАТЬ ВИДЕО
-        </button>
+        <div class="logo">CREATE</div>
+        <button class="create-btn" onclick="showUploadForm()">📹 СОЗДАТЬ ВИДЕО</button>
     </div>
 
-    <!-- Video Grid -->
     <div class="video-grid" id="videoGrid">
         <div style="text-align: center; grid-column: 1 / -1; color: #888;">
-            🎬 Загрузите первое видео!
+            🔄 Загрузка видео...
         </div>
     </div>
 
-    <!-- Upload Form -->
     <div class="overlay" id="overlay" onclick="hideUploadForm()"></div>
     <div class="upload-form" id="uploadForm">
-        <h2 style="text-align: center; margin-bottom: 20px;">📹 СОЗДАТЬ НОВОЕ ВИДЕО</h2>
+        <h2 style="text-align: center; margin-bottom: 20px;">📹 СОЗДАТЬ ВИДЕО</h2>
         <form id="uploadFormElement">
             <div class="form-group">
                 <label>Название видео:</label>
@@ -87,154 +96,153 @@
             </div>
             
             <div class="form-group">
-                <label>Выберите видео файл:</label>
-                <input type="file" id="videoFile" accept="video/*" required>
-                <div style="margin-top: 10px;">
-                    <video id="videoPreview" controls style="max-width: 100%; max-height: 200px; display: none;"></video>
-                </div>
+                <label>Ссылка на видео (YouTube/Vimeo/Google Drive):</label>
+                <input type="url" id="videoUrl" placeholder="https://..." required>
+                <small style="color: #aaa;">Вставьте ссылку на видео с YouTube, Vimeo или Google Drive</small>
             </div>
             
-            <button type="submit" class="submit-btn">🚀 ОПУБЛИКОВАТЬ ВИДЕО</button>
+            <div class="form-group">
+                <label>Ссылка на превью (по желанию):</label>
+                <input type="url" id="previewUrl" placeholder="https://...">
+            </div>
+            
+            <button type="submit" class="submit-btn">🚀 ОПУБЛИКОВАТЬ</button>
             <button type="button" class="cancel-btn" onclick="hideUploadForm()">❌ ОТМЕНА</button>
         </form>
     </div>
 
+    <!-- Полноэкранный видеоплеер -->
+    <div class="fullscreen-video" id="fullscreenVideo">
+        <button class="close-fullscreen" onclick="exitFullscreen()">✕ Закрыть</button>
+        <video id="fullscreenPlayer" controls></video>
+    </div>
+
     <script>
-        // БАЗА ДАННЫХ в LocalStorage
-        const DB_KEY = 'create_videos';
+        // БАЗА ДАННЫХ в GitHub
+        const GITHUB_DB_URL = 'https://raw.githubusercontent.com/ВАШ_USERNAME/ВАШ_РЕПОЗИТОРИЙ/main/database.json';
         
-        // Инициализация базы данных
-        function initDatabase() {
-            if (!localStorage.getItem(DB_KEY)) {
-                localStorage.setItem(DB_KEY, JSON.stringify([]));
+        let allVideos = [];
+        
+        // Загрузить видео из GitHub
+        async function loadVideosFromGitHub() {
+            try {
+                const response = await fetch(GITHUB_DB_URL + '?t=' + Date.now());
+                const videos = await response.json();
+                allVideos = videos;
+                displayVideos(videos);
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                document.getElementById('videoGrid').innerHTML = 
+                    '<div style="text-align: center; grid-column: 1 / -1; color: #888;">❌ Ошибка загрузки базы данных</div>';
             }
         }
         
-        // Получить все видео
-        function getVideos() {
-            return JSON.parse(localStorage.getItem(DB_KEY)) || [];
-        }
-        
-        // Сохранить видео
-        function saveVideo(videoData) {
-            const videos = getVideos();
-            const newVideo = {
-                id: Date.now(),
-                title: videoData.title,
-                description: videoData.description,
-                filename: videoData.filename,
-                videoUrl: videoData.videoUrl,
-                views: 0,
-                uploadDate: new Date().toLocaleDateString('ru-RU')
-            };
-            
-            videos.unshift(newVideo);
-            localStorage.setItem(DB_KEY, JSON.stringify(videos));
-            return newVideo;
-        }
-        
-        // Увеличить просмотры
-        function incrementViews(videoId) {
-            const videos = getVideos();
-            const videoIndex = videos.findIndex(v => v.id === videoId);
-            if (videoIndex !== -1) {
-                videos[videoIndex].views++;
-                localStorage.setItem(DB_KEY, JSON.stringify(videos));
-            }
-        }
-        
-        // Показать форму загрузки
-        function showUploadForm() {
-            document.getElementById('uploadForm').style.display = 'block';
-            document.getElementById('overlay').style.display = 'block';
-        }
-        
-        // Скрыть форму загрузки
-        function hideUploadForm() {
-            document.getElementById('uploadForm').style.display = 'none';
-            document.getElementById('overlay').style.display = 'none';
-            document.getElementById('uploadFormElement').reset();
-            document.getElementById('videoPreview').style.display = 'none';
-        }
-        
-        // Показать главную страницу
-        function showHomePage() {
-            hideUploadForm();
-            loadVideos();
-        }
-        
-        // Загрузить видео для отображения
-        function loadVideos() {
-            const videos = getVideos();
+        // Отобразить видео
+        function displayVideos(videos) {
             const videoGrid = document.getElementById('videoGrid');
             
             if (videos.length === 0) {
-                videoGrid.innerHTML = '<div style="text-align: center; grid-column: 1 / -1; color: #888;">🎬 Загрузите первое видео!</div>';
+                videoGrid.innerHTML = '<div style="text-align: center; grid-column: 1 / -1; color: #888;">🎬 Пока нет видео. Будьте первым!</div>';
                 return;
             }
             
             videoGrid.innerHTML = videos.map(video => `
                 <div class="video-card">
-                    <video class="video-player" controls onclick="incrementViews(${video.id})">
-                        <source src="${video.videoUrl}" type="video/mp4">
-                        Ваш браузер не поддерживает видео.
-                    </video>
+                    <div class="video-player" onclick="playInFullscreen('${video.videoUrl}')">
+                        ${video.previewUrl ? 
+                            `<img src="${video.previewUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${video.title}">` :
+                            `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #333;">
+                                🎥 Нажмите для просмотра
+                            </div>`
+                        }
+                    </div>
                     <div class="video-info">
                         <div class="video-title">${video.title}</div>
                         <div class="video-description">${video.description || 'Нет описания'}</div>
-                        <div class="video-views">👁️ ${video.views} просмотров • 📅 ${video.uploadDate}</div>
+                        <div class="video-views">👁️ ${video.views || 0} просмотров • 📅 ${video.date || 'Недавно'}</div>
                     </div>
                 </div>
             `).join('');
         }
         
-        // Обработчики событий
-        document.getElementById('videoFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const videoPreview = document.getElementById('videoPreview');
-                videoPreview.src = URL.createObjectURL(file);
-                videoPreview.style.display = 'block';
-            }
-        });
+        // Полноэкранный режим
+        function playInFullscreen(videoUrl) {
+            const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+            const fullscreenVideo = document.getElementById('fullscreenVideo');
+            
+            fullscreenPlayer.src = videoUrl;
+            fullscreenVideo.style.display = 'block';
+            fullscreenPlayer.play();
+        }
         
+        function exitFullscreen() {
+            const fullscreenVideo = document.getElementById('fullscreenVideo');
+            const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+            
+            fullscreenVideo.style.display = 'none';
+            fullscreenPlayer.pause();
+            fullscreenPlayer.src = '';
+        }
+        
+        // Форма загрузки
+        function showUploadForm() {
+            document.getElementById('uploadForm').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+        
+        function hideUploadForm() {
+            document.getElementById('uploadForm').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('uploadFormElement').reset();
+        }
+        
+        // Обработчик формы
         document.getElementById('uploadFormElement').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const title = document.getElementById('videoTitle').value;
             const description = document.getElementById('videoDescription').value;
-            const videoFile = document.getElementById('videoFile').files[0];
+            const videoUrl = document.getElementById('videoUrl').value;
+            const previewUrl = document.getElementById('previewUrl').value;
             
-            if (!videoFile) {
-                alert('Пожалуйста, выберите видео файл!');
+            if (!isValidUrl(videoUrl)) {
+                alert('❌ Введите корректную ссылку на видео!');
                 return;
             }
             
-            // Создаем временную ссылку на видео
-            const videoUrl = URL.createObjectURL(videoFile);
-            
-            // Сохраняем в базу данных
-            const videoData = {
+            // Добавляем видео локально
+            const newVideo = {
                 title: title,
                 description: description,
-                filename: videoFile.name,
-                videoUrl: videoUrl
+                videoUrl: videoUrl,
+                previewUrl: previewUrl || null,
+                views: 0,
+                date: new Date().toLocaleDateString('ru-RU'),
+                id: Date.now()
             };
             
-            saveVideo(videoData);
+            allVideos.unshift(newVideo);
+            displayVideos(allVideos);
             
-            // Обновляем интерфейс
+            // Показываем инструкцию
+            alert(`✅ Видео добавлено локально!\n\n📋 Чтобы опубликовать для всех:\n1. Создайте репозиторий на GitHub\n2. Добавьте файл database.json\n3. Вставьте этот JSON:\n\n${JSON.stringify(allVideos, null, 2)}`);
+            
             hideUploadForm();
-            loadVideos();
-            
-            alert('✅ Видео успешно опубликовано!');
         });
         
-        // Инициализация при загрузке
+        function isValidUrl(string) {
+            try {
+                new URL(string);
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+        
+        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
-            initDatabase();
-            loadVideos();
+            loadVideosFromGitHub();
         });
     </script>
 </body>
-</html>
+    </html>
